@@ -136,9 +136,9 @@ func (r *IngressReconciler) ReconcileVirtualService(ctx context.Context, ingress
 	return err
 }
 
-// +kubebuilder:rbac:groups=extensions,resources=ingresses,verbs=get;list
-// +kubebuilder:rbac:groups=networking.istio.io,resources=virtualservices,verbs=get;list;create;delete
-// +kubebuilder:rbac:groups=networking.istio.io,resources=gateways,verbs=get;list;create;delete
+// +kubebuilder:rbac:groups=extensions,resources=ingresses,verbs=get;list;watch
+// +kubebuilder:rbac:groups=networking.istio.io,resources=virtualservices,verbs=get;list;create;delete;update
+// +kubebuilder:rbac:groups=networking.istio.io,resources=gateways,verbs=get;list;create;delete;update
 // +kubebuilder:rbac:groups=extensions,resources=ingresses/status,verbs=get
 
 func (r *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
