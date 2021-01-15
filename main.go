@@ -22,7 +22,6 @@ import (
 	"os"
 
 	versionedclient "istio.io/client-go/pkg/clientset/versioned"
-	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -40,8 +39,6 @@ var (
 
 func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
-
-	_ = extensionsv1beta1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
 
