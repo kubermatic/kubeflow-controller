@@ -1,6 +1,6 @@
 
 # Image URL to use all building/pushing image targets
-IMG ?= aborilov/controller:latest
+IMG ?= quay.io/kubermatic/kubeflow-controller:latest
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 

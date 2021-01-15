@@ -7,19 +7,6 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - extensions
-  resources:
-  - ingresses
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - extensions
-  resources:
-  - ingresses/status
-  verbs:
-  - get
-- apiGroups:
   - networking.istio.io
   resources:
   - gateways
@@ -28,6 +15,7 @@ rules:
   - delete
   - get
   - list
+  - update
 - apiGroups:
   - networking.istio.io
   resources:
@@ -37,3 +25,18 @@ rules:
   - delete
   - get
   - list
+  - update
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses/status
+  verbs:
+  - get

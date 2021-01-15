@@ -24,7 +24,7 @@ import (
 	networking "istio.io/api/networking/v1alpha3"
 	networkingclient "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	versionedclient "istio.io/client-go/pkg/clientset/versioned"
-	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -81,7 +81,7 @@ func (r *IngressReconciler) ReconcileGateway(ctx context.Context) error {
 	return err
 }
 
-func (r *IngressReconciler) ReconcileVirtualService(ctx context.Context, ingress *extensionsv1beta1.Ingress) error {
+func (r *IngressReconciler) ReconcileVirtualService(ctx context.Context, ingress *networkingv1beta1.Ingress) error {
 	create := false
 
 	vs, err := r.IstioClient.NetworkingV1alpha3().VirtualServices(namespace).Get(ctx, name, v1.GetOptions{})
@@ -136,17 +136,17 @@ func (r *IngressReconciler) ReconcileVirtualService(ctx context.Context, ingress
 	return err
 }
 
-// +kubebuilder:rbac:groups=extensions,resources=ingresses,verbs=get;list
-// +kubebuilder:rbac:groups=networking.istio.io,resources=virtualservices,verbs=get;list;create;delete
-// +kubebuilder:rbac:groups=networking.istio.io,resources=gateways,verbs=get;list;create;delete
-// +kubebuilder:rbac:groups=extensions,resources=ingresses/status,verbs=get
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch
+// +kubebuilder:rbac:groups=networking.istio.io,resources=virtualservices,verbs=get;list;create;delete;update
+// +kubebuilder:rbac:groups=networking.istio.io,resources=gateways,verbs=get;list;create;delete;update
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses/status,verbs=get
 
 func (r *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
 	log := r.Log.WithValues("ingress", req.NamespacedName)
 	log.Info("reconcile", "request", req)
 
-	ingress := &extensionsv1beta1.Ingress{}
+	ingress := &networkingv1beta1.Ingress{}
 	if err := r.Get(ctx, req.NamespacedName, ingress); err != nil {
 		if !errors.IsNotFound(err) {
 			return reconcile.Result{}, err
@@ -195,6 +195,6 @@ func (r *IngressReconciler) cleanup(ctx context.Context, req ctrl.Request) error
 
 func (r *IngressReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&extensionsv1beta1.Ingress{}).
+		For(&networkingv1beta1.Ingress{}).
 		Complete(r)
 }
