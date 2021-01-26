@@ -34,7 +34,6 @@ import (
 )
 
 const (
-	name      = "challenge"
 	namespace = "kubeflow"
 )
 
@@ -46,9 +45,9 @@ type IngressReconciler struct {
 	IstioClient *versionedclient.Clientset
 }
 
-func (r *IngressReconciler) ReconcileGateway(ctx context.Context) error {
+func (r *IngressReconciler) ReconcileGateway(ctx context.Context, req ctrl.Request) error {
 	create := false
-	gw, err := r.IstioClient.NetworkingV1alpha3().Gateways(namespace).Get(ctx, name, v1.GetOptions{})
+	gw, err := r.IstioClient.NetworkingV1alpha3().Gateways(namespace).Get(ctx, req.Name, v1.GetOptions{})
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return err
@@ -58,7 +57,7 @@ func (r *IngressReconciler) ReconcileGateway(ctx context.Context) error {
 
 	}
 	gw.SetNamespace(namespace)
-	gw.SetName(name)
+	gw.SetName(req.Name)
 	gw.Spec = networking.Gateway{
 		Selector: map[string]string{"istio": "ingressgateway"},
 		Servers: []*networking.Server{
@@ -84,7 +83,7 @@ func (r *IngressReconciler) ReconcileGateway(ctx context.Context) error {
 func (r *IngressReconciler) ReconcileVirtualService(ctx context.Context, ingress *networkingv1beta1.Ingress) error {
 	create := false
 
-	vs, err := r.IstioClient.NetworkingV1alpha3().VirtualServices(namespace).Get(ctx, name, v1.GetOptions{})
+	vs, err := r.IstioClient.NetworkingV1alpha3().VirtualServices(namespace).Get(ctx, ingress.Name, v1.GetOptions{})
 	if err != nil {
 		if !errors.IsNotFound(err) {
 			return err
@@ -92,13 +91,13 @@ func (r *IngressReconciler) ReconcileVirtualService(ctx context.Context, ingress
 		vs = &networkingclient.VirtualService{}
 		create = true
 	}
-	vs.SetName(name)
+	vs.SetName(ingress.Name)
 	vs.SetNamespace(namespace)
 	rule := ingress.Spec.Rules[0]
 	path := rule.HTTP.Paths[0]
 	vs.Spec = networking.VirtualService{
 		Hosts:    []string{rule.Host},
-		Gateways: []string{name},
+		Gateways: []string{ingress.Name},
 		Http: []*networking.HTTPRoute{
 			&networking.HTTPRoute{
 				Match: []*networking.HTTPMatchRequest{
@@ -159,7 +158,7 @@ func (r *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return reconcile.Result{}, r.cleanup(ctx, req)
 	}
 	log.Info("reconcile gateway", "request", req)
-	if err := r.ReconcileGateway(ctx); err != nil {
+	if err := r.ReconcileGateway(ctx, req); err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -172,8 +171,8 @@ func (r *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 }
 
 func (r *IngressReconciler) cleanup(ctx context.Context, req ctrl.Request) error {
-	if _, err := r.IstioClient.NetworkingV1alpha3().VirtualServices(namespace).Get(ctx, name, v1.GetOptions{}); err == nil {
-		err := r.IstioClient.NetworkingV1alpha3().VirtualServices(namespace).Delete(ctx, name, v1.DeleteOptions{})
+	if _, err := r.IstioClient.NetworkingV1alpha3().VirtualServices(namespace).Get(ctx, req.Name, v1.GetOptions{}); err == nil {
+		err := r.IstioClient.NetworkingV1alpha3().VirtualServices(namespace).Delete(ctx, req.Name, v1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
@@ -181,8 +180,8 @@ func (r *IngressReconciler) cleanup(ctx context.Context, req ctrl.Request) error
 		return err
 	}
 
-	if _, err := r.IstioClient.NetworkingV1alpha3().Gateways(namespace).Get(ctx, name, v1.GetOptions{}); err == nil {
-		err := r.IstioClient.NetworkingV1alpha3().Gateways(namespace).Delete(ctx, name, v1.DeleteOptions{})
+	if _, err := r.IstioClient.NetworkingV1alpha3().Gateways(namespace).Get(ctx, req.Name, v1.GetOptions{}); err == nil {
+		err := r.IstioClient.NetworkingV1alpha3().Gateways(namespace).Delete(ctx, req.Name, v1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
